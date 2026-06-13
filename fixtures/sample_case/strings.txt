@@ -1,0 +1,7 @@
+ELFMAGIC_FAKE
+C2_SERVER=evilc2.example.com
+BEACON_URL=http://185.220.101.45/gate.php
+EXFIL_HOST=45.95.169.143
+DROPPER_HASH=aabbccdd11223344eeff5566778899aa
+CREDS_PATH=/home/victim/.aws/credentials
+PERSIST=/etc/cron.d/.update

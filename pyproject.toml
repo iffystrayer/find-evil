@@ -1,0 +1,35 @@
+[project]
+name = "find-evil"
+version = "0.1.0"
+description = "Autonomous DFIR agent for the SANS SIFT Workstation. Completion-guaranteed, provenance-grounded."
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+  "pyyaml>=6.0",
+  "jinja2>=3.1",
+  "asyncssh>=2.14",
+  "httpx>=0.27",
+  "orjson>=3.9",
+  "structlog>=24.1",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "ruff>=0.4", "black>=24.0"]
+mcp = ["mcp>=1.0"]
+
+[project.scripts]
+find-evil = "find_evil.interfaces.cli:app"
+find-evil-mcp = "find_evil.interfaces.mcp:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

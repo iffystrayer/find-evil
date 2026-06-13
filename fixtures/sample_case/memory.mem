@@ -1,0 +1,4 @@
+Synthetic memory image placeholder for the mock sample case.
+The MockExecutor keys fixtures by tool name, so this file content is
+not parsed; it exists only so evidence registration can hash a real
+memory_dump artifact. Real captures replace this in live runs.

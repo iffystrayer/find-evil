@@ -1,0 +1,5 @@
+PID    PPID   ImageFileName    Offset(V)         Threads  Handles  CreateTime
+4      0      System           0x8a0c1234        120      -        2026-05-01 09:00:01
+640    4      smss.exe         0x8a0c5678        3        -        2026-05-01 09:00:02
+1840   980    ransom.exe       0x8a0cabcd        8        -        2026-05-01 09:14:55
+1980   1840   vssadmin.exe     0x8a0cef01        2        -        2026-05-01 09:15:03

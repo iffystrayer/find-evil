@@ -1,0 +1,54 @@
+# Tool catalog in TEMPLATE form. The model fills typed slots only; code assembles.
+# slot types: evidence_path | workspace_path | enum | scalar
+tools:
+  - name: mmls
+    description: Display the partition layout of a disk image (Sleuth Kit).
+    template: "mmls {image}"
+    timeout_s: 60
+    category: triage
+    slots:
+      image: {type: evidence_path, required: true, from: evidence_id}
+
+  - name: fsstat
+    description: Display file system details and allocation (Sleuth Kit).
+    template: "fsstat -o {offset} {image}"
+    timeout_s: 120
+    category: triage
+    slots:
+      image:  {type: evidence_path, required: true, from: evidence_id}
+      offset: {type: scalar, required: true, example: "2048"}
+
+  - name: fls
+    description: List files and directories, including deleted, from a file system.
+    template: "fls -r -o {offset} {image}"
+    timeout_s: 300
+    category: filesystem
+    slots:
+      image:  {type: evidence_path, required: true, from: evidence_id}
+      offset: {type: scalar, required: true}
+
+  - name: log2timeline
+    description: Build a Plaso super timeline from a disk image.
+    template: "log2timeline.py --status_view none {out} {image}"
+    timeout_s: 1800
+    category: timeline
+    slots:
+      out:   {type: workspace_path, required: true, example: "/tmp/find-evil/tl.plaso"}
+      image: {type: evidence_path, required: true, from: evidence_id}
+
+  - name: vol_pslist
+    description: List running processes from a memory image (Volatility 3).
+    template: "vol -f {memory} windows.pslist"
+    timeout_s: 600
+    category: memory
+    slots:
+      memory: {type: evidence_path, required: true, from: evidence_id}
+
+  - name: strings
+    description: Extract printable strings from an artifact.
+    template: "strings -n {minlen} {target}"
+    timeout_s: 300
+    category: content
+    slots:
+      target: {type: evidence_path, required: true, from: evidence_id}
+      minlen: {type: scalar, required: false, default: "6"}

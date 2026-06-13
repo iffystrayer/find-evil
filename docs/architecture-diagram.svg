@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 760" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#37474f"/>
+    </marker>
+  </defs>
+  <rect width="1180" height="760" fill="#fafafa"/>
+  <text x="590" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#212121">Find Evil Agent — Architecture and Security Boundaries</text>
+
+  <!-- Interfaces -->
+  <rect x="40" y="70" width="250" height="110" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="165" y="93" text-anchor="middle" font-size="14" font-weight="bold" fill="#0d47a1">Interfaces (thin adapters)</text>
+  <text x="165" y="118" text-anchor="middle" font-size="12" fill="#263238">CLI: find-evil</text>
+  <text x="165" y="138" text-anchor="middle" font-size="12" fill="#263238">MCP server: find-evil-mcp</text>
+  <text x="165" y="162" text-anchor="middle" font-size="11" fill="#546e7a">identical reports, one engine (ADR 0005)</text>
+
+  <!-- Engine -->
+  <rect x="350" y="70" width="320" height="110" rx="8" fill="#ede7f6" stroke="#4527a0" stroke-width="1.5"/>
+  <text x="510" y="93" text-anchor="middle" font-size="14" font-weight="bold" fill="#311b92">InvestigationEngine</text>
+  <text x="510" y="116" text-anchor="middle" font-size="12" fill="#263238">explicit async state machine (ADR 0001)</text>
+  <text x="510" y="136" text-anchor="middle" font-size="12" fill="#263238">register → triage → hypothesize → test → report</text>
+  <text x="510" y="160" text-anchor="middle" font-size="11" fill="#546e7a">report runs in finally: completion guaranteed</text>
+
+  <!-- LLM layer -->
+  <rect x="730" y="70" width="410" height="110" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="935" y="93" text-anchor="middle" font-size="14" font-weight="bold" fill="#bf360c">LLM layer</text>
+  <text x="935" y="116" text-anchor="middle" font-size="12" fill="#263238">Ollama / OpenAI / Anthropic providers</text>
+  <text x="935" y="136" text-anchor="middle" font-size="12" fill="#263238">structured output, transport retry with backoff</text>
+  <text x="935" y="160" text-anchor="middle" font-size="11" fill="#546e7a">returns typed ToolParams, never a command string</text>
+
+  <!-- Boundary 1 -->
+  <rect x="350" y="220" width="450" height="120" rx="8" fill="#fce4ec" stroke="#ad1457" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="575" y="244" text-anchor="middle" font-size="14" font-weight="bold" fill="#880e4f">Security boundary 1 — model to shell (ADR 0002)</text>
+  <text x="575" y="268" text-anchor="middle" font-size="12" fill="#263238">assemble_command: template + typed slots + shlex.quote</text>
+  <text x="575" y="288" text-anchor="middle" font-size="12" fill="#263238">evidence path allowlist + enum/scalar slot validation</text>
+  <text x="575" y="308" text-anchor="middle" font-size="12" fill="#263238">CommandValidator backstop: forbidden shell metacharacters</text>
+  <text x="575" y="328" text-anchor="middle" font-size="11" fill="#546e7a">no code path executes free-text model output</text>
+
+  <!-- Executors -->
+  <rect x="40" y="390" width="330" height="130" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="205" y="413" text-anchor="middle" font-size="14" font-weight="bold" fill="#1b5e20">Executor protocol (ADR 0004)</text>
+  <text x="205" y="437" text-anchor="middle" font-size="12" fill="#263238">MockExecutor: replays captured fixtures</text>
+  <text x="205" y="457" text-anchor="middle" font-size="12" fill="#263238">SSHExecutor: asyncssh, host key verification</text>
+  <text x="205" y="477" text-anchor="middle" font-size="12" fill="#263238">timeouts and transport errors become results</text>
+  <text x="205" y="501" text-anchor="middle" font-size="11" fill="#546e7a">run() never raises; the loop never aborts on a tool failure</text>
+
+  <!-- SIFT VM -->
+  <rect x="40" y="560" width="330" height="120" rx="8" fill="#eceff1" stroke="#37474f" stroke-width="1.5"/>
+  <text x="205" y="583" text-anchor="middle" font-size="14" font-weight="bold" fill="#263238">SANS SIFT Workstation (VM)</text>
+  <text x="205" y="607" text-anchor="middle" font-size="12" fill="#263238">Volatility, TSK, log2timeline, grep, strings</text>
+  <text x="205" y="627" text-anchor="middle" font-size="12" fill="#263238">evidence under allowlisted paths</text>
+  <text x="205" y="651" text-anchor="middle" font-size="11" fill="#546e7a">evidence hashed on the VM (sha256), never read locally</text>
+
+  <!-- Boundary 2 / Trust layer -->
+  <rect x="430" y="390" width="370" height="290" rx="8" fill="#fff8e1" stroke="#f9a825" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="615" y="414" text-anchor="middle" font-size="14" font-weight="bold" fill="#f57f17">Security boundary 2 — tool output to model</text>
+  <text x="615" y="438" text-anchor="middle" font-size="12" fill="#263238">stdout treated as untrusted data, never instructions</text>
+  <text x="615" y="458" text-anchor="middle" font-size="12" fill="#263238">prompt-injection guardrail flags instruction-like output</text>
+  <line x1="450" y1="474" x2="780" y2="474" stroke="#f9a825" stroke-width="1"/>
+  <text x="615" y="498" text-anchor="middle" font-size="14" font-weight="bold" fill="#f57f17">Security boundary 3 — model to report (ADR 0003)</text>
+  <text x="615" y="522" text-anchor="middle" font-size="12" fill="#263238">Finding requires provenance: execution id + evidence span</text>
+  <text x="615" y="542" text-anchor="middle" font-size="12" fill="#263238">membership_check: indicators must appear in cited span</text>
+  <text x="615" y="562" text-anchor="middle" font-size="12" fill="#263238">critique pass: supported / weak / contradicted</text>
+  <text x="615" y="582" text-anchor="middle" font-size="12" fill="#263238">summary rejected if it introduces an ungrounded IOC</text>
+  <text x="615" y="606" text-anchor="middle" font-size="11" fill="#546e7a">hallucinated findings are structurally excluded</text>
+  <text x="615" y="626" text-anchor="middle" font-size="11" fill="#546e7a">analysis/analyzer.py · analysis/verify.py · analysis/summary.py</text>
+
+  <!-- Ledger + report -->
+  <rect x="860" y="390" width="280" height="130" rx="8" fill="#e0f7fa" stroke="#00838f" stroke-width="1.5"/>
+  <text x="1000" y="413" text-anchor="middle" font-size="14" font-weight="bold" fill="#006064">SQLite audit ledger</text>
+  <text x="1000" y="437" text-anchor="middle" font-size="12" fill="#263238">evidence, hypotheses, executions,</text>
+  <text x="1000" y="457" text-anchor="middle" font-size="12" fill="#263238">findings with provenance, token usage</text>
+  <text x="1000" y="481" text-anchor="middle" font-size="11" fill="#546e7a">audit trail is a database join, not a promise</text>
+
+  <rect x="860" y="560" width="280" height="120" rx="8" fill="#f1f8e9" stroke="#558b2f" stroke-width="1.5"/>
+  <text x="1000" y="583" text-anchor="middle" font-size="14" font-weight="bold" fill="#33691e">Report</text>
+  <text x="1000" y="607" text-anchor="middle" font-size="12" fill="#263238">deterministic assembly from the ledger</text>
+  <text x="1000" y="627" text-anchor="middle" font-size="12" fill="#263238">findings, execution log, summary, IOCs</text>
+  <text x="1000" y="651" text-anchor="middle" font-size="11" fill="#546e7a">Markdown + optional PDF</text>
+
+  <!-- Arrows -->
+  <line x1="290" y1="125" x2="350" y2="125" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="670" y1="125" x2="730" y2="125" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="935" y1="180" x2="935" y2="205" stroke="#37474f" stroke-width="1.5"/>
+  <line x1="935" y1="205" x2="800" y2="265" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="905" y="225" font-size="11" fill="#546e7a">typed ToolParams</text>
+  <line x1="510" y1="180" x2="510" y2="220" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="430" y1="340" x2="240" y2="390" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="300" y="362" font-size="11" fill="#546e7a">assembled command</text>
+  <line x1="205" y1="520" x2="205" y2="560" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="240" y="544" font-size="11" fill="#546e7a">SSH</text>
+  <line x1="370" y1="455" x2="430" y2="455" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="400" y="445" font-size="11" fill="#546e7a">stdout</text>
+  <line x1="800" y1="455" x2="860" y2="455" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="830" y="445" font-size="11" fill="#546e7a">grounded</text>
+  <line x1="1000" y1="520" x2="1000" y2="560" stroke="#37474f" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>

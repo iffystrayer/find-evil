@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+*.db
+.env
+mock_report.md
+report.md
+*.egg-info/
+build/
+dist/
+.DS_Store
+.claude/settings.local.json

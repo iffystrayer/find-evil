@@ -1,0 +1,37 @@
+# Incident Report: {{ r.incident }}
+
+**Run:** {{ r.run_id }}  **Status:** {{ r.status }}  **Duration:** {{ "%.1f"|format(r.duration_s) }}s
+**Goal:** {{ r.goal }}
+**Stop reason:** {{ r.stop_reason }}
+**LLM usage:** {{ r.tokens_used }} tokens across {{ r.llm_calls }} call{{ "" if r.llm_calls == 1 else "s" }}
+
+## Executive Summary
+{{ summary or "No model summary generated." }}
+
+## Evidence
+{% for e in r.evidence %}- `{{ e.path }}` ({{ e.type }}, sha256 `{{ e.sha256[:16] }}...`, {{ e.size_bytes }} bytes)
+{% endfor %}
+
+## Hypothesis Ledger
+{% for h in r.hypotheses %}- **[{{ h.status }}]** {{ h.statement }} (MITRE: {{ h.mitre|join(", ") }}; posterior {{ "%.2f"|format(h.posterior) }})
+{% endfor %}
+
+## Findings (provenance-grounded)
+{% if not rows %}No grounded findings. The investigation completed without confirming evil.{% endif %}
+{% for row in rows %}
+### {{ row.severity|upper }} - {{ row.description }}
+- **Verification:** {{ row.verification }}  **Confidence:** {{ "%.2f"|format(row.confidence) }}
+- **Produced by:** `{{ row.command }}`
+- **Evidence span:** {{ row.evidence_span }} (raw output: `{{ row.stdout_path }}`)
+{% endfor %}
+
+## Indicators of Compromise
+{% for k, vals in r.iocs.items() %}- **{{ k }}:** {{ vals|join(", ") }}
+{% endfor %}
+
+## Execution Log
+{% if not executions %}No tool executions recorded.{% endif %}
+{% for ex in executions %}- `{{ ex.started_at }}` **{{ ex.tool }}** [{{ ex.status }}, exit {{ ex.exit_code }}, {{ "%.2f"|format(ex.duration_s) }}s, {{ ex.tokens }} tok] (`{{ ex.execution_id }}`)
+  - command: `{{ ex.command }}`
+  - raw output: `{{ ex.stdout_path }}`
+{% endfor %}
