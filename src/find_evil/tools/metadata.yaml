@@ -3,7 +3,7 @@
 tools:
   - name: mmls
     description: Display the partition layout of a disk image (Sleuth Kit).
-    template: "mmls {image}"
+    template: "sudo mmls {image}"
     timeout_s: 60
     category: triage
     slots:
@@ -11,7 +11,7 @@ tools:
 
   - name: fsstat
     description: Display file system details and allocation (Sleuth Kit).
-    template: "fsstat -o {offset} {image}"
+    template: "sudo fsstat -o {offset} {image}"
     timeout_s: 120
     category: triage
     slots:
@@ -20,25 +20,24 @@ tools:
 
   - name: fls
     description: List files and directories, including deleted, from a file system.
-    template: "fls -r -o {offset} {image}"
+    template: "sudo fls -r {image}"
     timeout_s: 300
     category: filesystem
     slots:
       image:  {type: evidence_path, required: true, from: evidence_id}
-      offset: {type: scalar, required: true}
 
   - name: log2timeline
     description: Build a Plaso super timeline from a disk image.
-    template: "log2timeline.py --status_view none {out} {image}"
+    template: "log2timeline.py --status_view none --quiet {out} {image}"
     timeout_s: 1800
     category: timeline
     slots:
-      out:   {type: workspace_path, required: true, example: "/tmp/find-evil/tl.plaso"}
+      out:   {type: workspace_path, required: true, example: "/tmp/find-evil/timeline.plaso"}
       image: {type: evidence_path, required: true, from: evidence_id}
 
   - name: vol_pslist
     description: List running processes from a memory image (Volatility 3).
-    template: "vol -f {memory} windows.pslist"
+    template: "/home/sansforensics/.local/bin/vol -f {memory} windows.pslist"
     timeout_s: 600
     category: memory
     slots:

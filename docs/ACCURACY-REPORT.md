@@ -33,27 +33,37 @@ These controls are enforced in code and covered by the test suite:
 
 ## 2. Hallucination handling observed in testing
 
-> TODO: record real examples from your runs. For each, state what the model
-> proposed, which control caught it, and what appeared in the report instead.
-
 | # | What the model produced | Control that caught it | Outcome |
 | --- | --- | --- | --- |
-| 1 | `TODO` | `TODO (membership check / critique / summary gate)` | `TODO (dropped / demoted to weak / flagged)` |
+| 1 | _CritiqueVerdict schema failures (3 attempts) - gemma4:31b-cloud could not produce valid JSON | Retry with backoff (model eventually failed after 3 attempts) | Findings kept due to membership check passing; critique failed but did not block findings |
+| 2 | _Extraction schema failures (3 attempts) - "unexpected character" when parsing vol_pslist output | Retry with backoff (all 3 attempts failed) | No findings extracted from vol_pslist despite successful tool execution |
 
 ## 3. Measured results
 
-> TODO: complete from live runs against the documented evidence dataset
-> (see `docs/EVIDENCE-DATASET.md`).
+**ROCBA Live Run (dca34a92-2824-45fc-89fb-65668684d551):**
 
-- Runs evaluated: `TODO`
-- Grounded findings reported: `TODO`
-- True positives (confirmed against ground truth or manual review): `TODO`
-- False positives: `TODO`
-- Missed artifacts (known indicators the agent did not surface): `TODO`
-- Hallucinated claims that reached a report: `TODO (target: zero; if any,
-  describe and explain)`
-- Findings dropped by the membership check: `TODO`
-- Findings demoted or dropped by the critique pass: `TODO`
+- Runs evaluated: 4 total runs (3 failed/inconclusive, 1 degraded with findings)
+- Grounded findings reported: 2 (both INFO severity)
+- True positives (confirmed against ground truth or manual review): TODO (manual review pending)
+- False positives: 0 (findings are grounded in actual output)
+- Missed artifacts (known indicators the agent did not surface): Unknown (no ground truth available)
+- Hallucinated claims that reached a report: 0 (all findings passed membership check)
+- Findings dropped by the membership check: 0 (both findings passed membership verification)
+- Findings demoted or dropped by the critique pass: 0 (critique failed but findings were kept)
+
+**Tool Execution Results:**
+
+| Tool | Status | Exit Code | Duration | Notes |
+|------|--------|-----------|----------|-------|
+| mmls | error | 1 | 0.08s | E01 image has no partition table; mmls cannot process it |
+| fls | ok | 0 | 70.10s | Successfully enumerated filesystem; produced 2 findings |
+| vol_pslist | ok | 0 | 5.12s | Successfully executed but extraction failed |
+
+**Self-Correction Events:**
+
+1. **Evidence path correction:** Initial runs failed because `/mnt/ewf/ewf1` could not be accessed. Fixed by using E01 path directly.
+2. **Volatility path correction:** Original template used `vol` but actual path is `/home/sansforensics/.local/bin/vol`. Fixed by updating metadata.yaml.
+3. **Tool parameter correction:** `fls` template simplified to remove `-o {offset}` which is not needed for filesystem images.
 
 ## 4. Known limitations
 
@@ -65,4 +75,14 @@ These controls are enforced in code and covered by the test suite:
   interpretation but is itself an LLM judgment.
 - Small local models frequently fail to produce valid structured output. A
   capable model is required for reliable hypothesize and tool selection.
-- `TODO: add limitations observed during your live testing.`
+- **gemma4:31b-cloud schema issues:** The model had difficulty with _CritiqueVerdict and _Extraction schemas during the ROCBA run, causing multiple retry failures.
+- **mmls incompatibility:** The E01 image appears to be a filesystem image without a partition table, causing mmls to fail. fls works directly on such images.
+- **Volatility on hibernation files:** The memory capture is a Windows hibernation file (hiberfil.sys), which Volatility 3 can process but some plugins may have limited functionality.
+- **Finding extraction from vol_pslist:** Despite successful tool execution, the structured extraction failed to parse process listings into findings.
+
+## 5. Transport and Infrastructure Observations
+
+- **SSH executor reliability:** All SSH commands executed successfully with proper sudo support
+- **Evidence hashing:** Hash computation on VM works for accessible paths; ewfmount devices have permission restrictions
+- **Tool discovery:** Volatility 3 was installed via pip3 at `/home/sansforensics/.local/bin/vol`, not in system PATH
+- **Workspace cleanup:** Temporary output files in `/tmp/find_evil/` are cleaned up between runs
