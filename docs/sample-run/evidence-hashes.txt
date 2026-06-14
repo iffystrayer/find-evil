@@ -1,0 +1,23 @@
+# ROCBA Evidence Hashes
+# Generated during SANS SIFT Find Evil! hackathon validation run
+
+rocba-cdrive.e01:
+  SHA256: f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67
+  Size: 23,678,691,658 bytes (23GB)
+  Type: EnCase E01 disk image
+  MD5: 5efc207c85587683e5ca5fa2d5ef1aa4
+
+Rocba-Memory.zip:
+  SHA256: 32cec94018051f6ce20ec75f1b7b53ad2f6eb5e8bbaec7b402e30409af552b09
+  Size: 5,628,194,708 bytes (5.3GB)
+  Type: 7-Zip archive
+
+Rocba-Memory.raw (extracted from zip):
+  SHA256: eb33bdf63730858a65a90fcf68d2190c17fb13a1f2945370d5493a27ed44765d
+  Size: 19,050,528,768 bytes (18GB)
+  Type: Windows hibernation file (hiberfil.sys)
+
+ROCBA-BACKGROUND.pptx:
+  SHA256: 44a12c54d13243397803e6e44112fa7bc365ed7f9bcb48e6769d7e91d8980834
+  Size: 39,101,504 bytes (39MB)
+  Type: PowerPoint briefing

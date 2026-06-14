@@ -1,0 +1,199 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 3287 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+50 742 Td
+(# Incident Report: Fred Rocba, a Stark Research Labs employee, discovered unauthorized ) Tj
+T*
+(access to his work computer while on vacation. Pictures from his work system were synced to ) Tj
+T*
+(an unknown location. The disk image \(rocba-cdrive.e01\) contains a Windows filesystem, and ) Tj
+T*
+(the memory capture \(Rocba-Memory.raw\) is a Windows hibernation file. Investigate both ) Tj
+T*
+(artifacts to identify: \(1\) how attackers gained initial access, \(2\) what malware or ) Tj
+T*
+(persistence mechanisms were installed, \(3\) what data was exfiltrated, and \(4\) any network ) Tj
+T*
+(connections or command-and-control activity. Use Volatility on the memory file to analyze ) Tj
+T*
+(running processes, network connections, and malicious code.) Tj
+T*
+() Tj
+T*
+(**Run:** dca34a92-2824-45fc-89fb-65668684d551  **Status:** degraded  **Duration:** 382.1s) Tj
+T*
+(**Goal:** Reconstruct the attack chain and identify IOCs.) Tj
+T*
+(**Stop reason:** no further leads) Tj
+T*
+(**LLM usage:** 797478 tokens across 16 calls) Tj
+T*
+() Tj
+T*
+(## Executive Summary) Tj
+T*
+(Two PowerShell scripts were identified on the system. These include OfficeIntegrator.ps1 ) Tj
+T*
+(located in the AppV Setup directory and RegisterInboxTemplates.ps1 located in the UEV ) Tj
+T*
+(Scripts directory.) Tj
+T*
+() Tj
+T*
+(## Evidence) Tj
+T*
+(- `/cases/starter/rocba-cdrive.e01` \(disk_image, sha256 `f2eb856d6fb48e39...`, 23678691658 ) Tj
+T*
+(bytes\)) Tj
+T*
+(- `/cases/rocba/Rocba-Memory/Rocba-Memory.raw` \(disk_image, sha256 `eb33bdf63730858a...`, ) Tj
+T*
+(19050528768 bytes\)) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(## Hypothesis Ledger) Tj
+T*
+(- **[confirmed]** The attacker established persistence using a scheduled task or registry ) Tj
+T*
+(run key to execute a malicious payload. \(MITRE: T1053.005, T1547.001; posterior 0.99\)) Tj
+T*
+(- **[inconclusive]** The attacker used a remote access trojan \(RAT\) to exfiltrate files, ) Tj
+T*
+(evidenced by active network connections in memory. \(MITRE: T1071.001, T1041; posterior 0.30\)) Tj
+T*
+(- **[open]** Initial access was gained via a phishing email containing a malicious ) Tj
+T*
+(attachment that executed a process in memory. \(MITRE: T1566.001, T1204.002; posterior 0.40\)) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(## Findings \(provenance-grounded\)) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(### INFO - Presence of a PowerShell script named OfficeIntegrator.ps1 in the AppV Setup ) Tj
+T*
+(directory.) Tj
+T*
+(- **Verification:** supported  **Confidence:** 0.90) Tj
+T*
+(- **Produced by:** `sudo fls -r /cases/starter/rocba-cdrive.e01`) Tj
+T*
+(- **Evidence span:** lines 110-110 \(raw output: `/tmp/find-) Tj
+T*
+(evil/dca34a92-2824-45fc-89fb-65668684d551/fls-42cb6aaf-beff-4783-9579-2333524aaf6c.txt`\)) Tj
+T*
+() Tj
+T*
+(### INFO - Presence of a script named RegisterInboxTemplates.ps1 in the UEV Scripts ) Tj
+T*
+(directory.) Tj
+T*
+(- **Verification:** supported  **Confidence:** 0.90) Tj
+T*
+(- **Produced by:** `sudo fls -r /cases/starter/rocba-cdrive.e01`) Tj
+T*
+(- **Evidence span:** lines 505-505 \(raw output: `/tmp/find-) Tj
+T*
+(evil/dca34a92-2824-45fc-89fb-65668684d551/fls-42cb6aaf-beff-4783-9579-2333524aaf6c.txt`\)) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(## Indicators of Compromise) Tj
+T*
+(- **path:** OfficeIntegrator.ps1, RegisterInboxTemplates.ps1) Tj
+T*
+() Tj
+T*
+() Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1139 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+50 742 Td
+(## Execution Log) Tj
+T*
+() Tj
+T*
+(- `2026-06-14T07:10:36.611719+00:00` **mmls** [error, exit 1, 0.08s, 0 tok] ) Tj
+T*
+(\(`cdabee11-9ba0-4e64-997b-c3d4d6f096d1`\)) Tj
+T*
+(  - command: `sudo mmls /cases/starter/rocba-cdrive.e01`) Tj
+T*
+(  - raw output: `/tmp/find-evil/dca34a92-2824-45fc-89fb-65668684d551/mmls-) Tj
+T*
+(cdabee11-9ba0-4e64-997b-c3d4d6f096d1.txt`) Tj
+T*
+(- `2026-06-14T07:11:52.598463+00:00` **fls** [ok, exit 0, 70.10s, 201838 tok] \(`42cb6aaf-) Tj
+T*
+(beff-4783-9579-2333524aaf6c`\)) Tj
+T*
+(  - command: `sudo fls -r /cases/starter/rocba-cdrive.e01`) Tj
+T*
+(  - raw output: `/tmp/find-evil/dca34a92-2824-45fc-89fb-65668684d551/fls-42cb6aaf-) Tj
+T*
+(beff-4783-9579-2333524aaf6c.txt`) Tj
+T*
+(- `2026-06-14T07:13:01.032577+00:00` **vol_pslist** [ok, exit 0, 5.12s, 0 tok] ) Tj
+T*
+(\(`a270849c-7d5c-48d9-afd4-6618642d8b92`\)) Tj
+T*
+(  - command: `/home/sansforensics/.local/bin/vol -f /cases/rocba/Rocba-Memory/Rocba-) Tj
+T*
+(Memory.raw windows.pslist`) Tj
+T*
+(  - raw output: `/tmp/find-evil/dca34a92-2824-45fc-89fb-65668684d551/vol_pslist-a270849c-) Tj
+T*
+(7d5c-48d9-afd4-6618642d8b92.txt`) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000189 00000 n 
+0000003528 00000 n 
+0000003654 00000 n 
+0000004845 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+4971
+%%EOF
