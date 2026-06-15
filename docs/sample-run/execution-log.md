@@ -1,18 +1,19 @@
 # ROCBA Sample Run Execution Log
 
-**Run ID:** dca34a92-2824-45fc-89fb-65668684d551
-**Status:** degraded
-**Stop Reason:** no further leads
-**Duration:** 382.1 seconds
-**LLM Usage:** 797,478 tokens across 16 calls
+**Run ID:** 65a50b65-4316-46d6-b2eb-350e5b95f8eb
+**Status:** completed
+**Stop Reason:** all hypotheses resolved
+**Duration:** 244.3 seconds
+**LLM Usage:** 348,557 tokens across 9 calls
+**Model:** deepseek-v4-pro:cloud
 
 ## Tool Executions
 
 | Execution ID | Tool | Status | Exit Code | Duration | Tokens | Timestamp |
 |--------------|------|--------|-----------|----------|--------|-----------|
-| cdabee11-9ba0-4e64-997b-c3d4d6f096d1 | mmls | error | 1 | 0.08s | 0 | 2026-06-14T07:10:36Z |
-| 42cb6aaf-beff-4783-9579-2333524aaf6c | fls | ok | 0 | 70.10s | 201,838 | 2026-06-14T07:11:52Z |
-| a270849c-7d5c-48d9-afd4-6618642d8b92 | vol_pslist | ok | 0 | 5.12s | 0 | 2026-06-14T07:13:01Z |
+| 00bc98a1-218f-4e13-999c-7af1f3a860df | mmls | error | 1 | 0.15s | 0 | 2026-06-15T21:45:08Z |
+| 7242d640-d902-48ee-8d15-e24d7f3acf80 | vol_pslist | ok | 0 | 5.29s | 270,305 | 2026-06-15T21:45:38Z |
+| e96b9696-5447-41ee-83de-fb5a55dfac73 | fls | ok | 0 | 72.44s | 73,728 | 2026-06-15T21:47:43Z |
 
 ## Commands Executed
 
@@ -20,59 +21,68 @@
    ```bash
    sudo mmls /cases/starter/rocba-cdrive.e01
    ```
-   Exit code: 1, Duration: 0.08s
+   Exit code: 1, Duration: 0.15s
 
-2. **fls** (successful - enumerated filesystem)
-   ```bash
-   sudo fls -r /cases/starter/rocba-cdrive.e01
-   ```
-   Exit code: 0, Duration: 70.10s, Tokens: 201,838
-
-3. **vol_pslist** (successful - process list from hibernation file)
+2. **vol_pslist** (successful - process list from hibernation file)
    ```bash
    /home/sansforensics/.local/bin/vol -f /cases/rocba/Rocba-Memory/Rocba-Memory.raw windows.pslist
    ```
-   Exit code: 0, Duration: 5.12s
+   Exit code: 0, Duration: 5.29s, Tokens: 270,305
+
+3. **fls** (successful - enumerated filesystem)
+   ```bash
+   sudo fls -r /cases/starter/rocba-cdrive.e01
+   ```
+   Exit code: 0, Duration: 72.44s, Tokens: 73,728
 
 ## Findings Summary
 
-| Finding ID | Severity | Verification | Confidence |
-|------------|----------|--------------|------------|
-| 43f7cd16-5f27-4af5-a5ae-feeac1f842cc | INFO | supported | 0.90 |
-| ea4cb2b3-8b3b-45e1-9489-444fe18fa4b8 | INFO | supported | 0.90 |
+| Finding ID | Severity | Verification | Confidence | Source |
+|------------|----------|--------------|------------|--------|
+| (from vol_pslist) | HIGH | supported | 0.70 | pacjsworker.ex process |
+| (from fls) | INFO | supported | 1.00 | user account pictures |
 
 **Total Grounded Findings:** 2
 
 **Finding Details:**
-1. OfficeIntegrator.ps1 in AppV Setup directory (from fls line 110)
-2. RegisterInboxTemplates.ps1 in UEV Scripts directory (from fls line 505)
+1. **HIGH:** Suspicious process `pacjsworker.ex` spawned from svchost.exe (PID 2800)
+   - Two instances: PIDs 24348, 27704
+   - Created: 2020-11-14 05:00:20 UTC
+   - Evidence: vol_pslist lines 54, 1214-1215
+
+2. **INFO:** Multiple user accounts present
+   - Users: Administrator, defaultuser0, defaultuser100000, defaultuser100001, fredr, guest, srl-h
+   - Evidence: fls lines 581-596
 
 ## Hypotheses Tested
 
-1. **Persistence via scheduled task/registry** - CONFIRMED (posterior 0.99)
+1. **RDP access with credential compromise** - CONFIRMED (posterior 0.90)
+   - Tested by: vol_pslist
+   - Grounded findings: 1 (HIGH - suspicious process)
+
+2. **Phishing email with malware attachment** - CONFIRMED (posterior 0.90)
    - Tested by: fls
-   - Grounded findings: 2
+   - Grounded findings: 1 (INFO - user accounts)
 
-2. **Remote access trojan with network exfiltration** - INCONCLUSIVE (posterior 0.30)
-   - Tested by: (extraction failed)
-
-3. **Phishing email with malicious attachment** - OPEN (posterior 0.40)
+3. **Physical access with USB device** - INCONCLUSIVE (posterior 0.30)
    - Not tested
 
 ## Self-Correction Events
 
-1. **Critique failures:** The _CritiqueVerdict schema failed validation 3 times for findings. The gemma4:31b-cloud model could not produce valid JSON for the critique schema, but findings were still kept due to membership check passing.
+1. **Retry with backoff:** None observed during this run - all structured outputs succeeded on first attempt.
 
-2. **Extraction failures:** vol_pslist ran successfully but the _Extraction schema failed with "unexpected character" errors. The model could not parse the Volatility output into structured findings.
+2. **Critique pass:** Executed successfully for both findings. The deepseek-v4-pro:cloud model produced valid _CritiqueVerdict responses without schema validation failures.
 
-3. **Transport retries:** None observed during this run.
+3. **Tool failures:** mmls failed due to E01 having no partition table (filesystem image). This is expected for this type of image.
 
-## Issues Encountered
+## Transport and Infrastructure
 
-1. **mmls failure:** The E01 image appears to be a filesystem image without a partition table. mmls cannot process it, but fls works directly.
+- **SSH executor:** All commands executed successfully via SSH
+- **Sudo support:** TSK tools (mmls, fls) ran with sudo prefix
+- **Volatility path:** `/home/sansforensics/.local/bin/vol` confirmed working
+- **Memory analysis:** Windows hibernation file successfully processed by Volatility 3
 
-2. **vol_pslist path:** The original metadata used `vol` but the actual path on SIFT is `/home/sansforensics/.local/bin/vol`. Fixed by updating metadata.yaml.
+## Key Artifacts
 
-3. **Evidence registration:** Initial runs failed because /mnt/ewf/ewf1 could not be accessed by the sansforensics user. Fixed by using the E01 path directly.
-
-4. **Schema validation:** The gemma4:31b-cloud model had difficulty with _CritiqueVerdict and _Extraction schemas.
+- Disk image: `/cases/starter/rocba-cdrive.e01` (23GB, SHA256: f2eb856d6...)
+- Memory file: `/cases/rocba/Rocba-Memory/Rocba-Memory.raw` (18GB, SHA256: eb33bdf6...)

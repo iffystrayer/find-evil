@@ -19,7 +19,7 @@ def test_clean_command_assembles():
     cmd = assemble_command(
         META, ToolParams(tool="mmls", params={"image": "ev1"}), EV, ALLOW
     )
-    assert cmd == "mmls /mnt/evidence/win10.E01"
+    assert cmd == "sudo mmls /mnt/evidence/win10.E01"
 
 
 def test_narration_cannot_become_a_command():
