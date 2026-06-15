@@ -3,8 +3,8 @@ __pycache__/
 .venv/
 *.db
 .env
-mock_report.md
-report.md
+/mock_report.md
+/report.md
 *.egg-info/
 build/
 dist/
