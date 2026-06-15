@@ -35,8 +35,11 @@ These controls are enforced in code and covered by the test suite:
 
 | # | What the model produced | Control that caught it | Outcome |
 | --- | --- | --- | --- |
-| 1 | _CritiqueVerdict schema failures (3 attempts) - gemma4:31b-cloud could not produce valid JSON | Retry with backoff (model eventually failed after 3 attempts) | Findings kept due to membership check passing; critique failed but did not block findings |
+| 1 | _CritiqueVerdict schema failures (3 attempts) - gemma4:31b-cloud could not produce valid JSON | Retry with backoff (all 3 attempts failed) | Critique pass did NOT execute; findings rested on membership check alone |
 | 2 | _Extraction schema failures (3 attempts) - "unexpected character" when parsing vol_pslist output | Retry with backoff (all 3 attempts failed) | No findings extracted from vol_pslist despite successful tool execution |
+| 3 | False positive findings: OfficeIntegrator.ps1 and RegisterInboxTemplates.ps1 flagged as suspicious | None (membership check passed - files exist in output) | Findings reported but are probable false positives (benign Microsoft components) |
+
+**Note on Finding #3:** The two findings are likely false positives. OfficeIntegrator.ps1 is a standard Microsoft Application Virtualization (AppV) component, and RegisterInboxTemplates.ps1 is a standard User Experience Virtualization (UEV) component. On a normal Windows system these are benign. The agent correctly identified their presence but did not correctly assess their maliciousness. The hypothesis "Persistence via scheduled task or registry: CONFIRMED, posterior 0.99" is not supported by this evidence.
 
 ## 3. Measured results
 
@@ -44,45 +47,70 @@ These controls are enforced in code and covered by the test suite:
 
 - Runs evaluated: 4 total runs (3 failed/inconclusive, 1 degraded with findings)
 - Grounded findings reported: 2 (both INFO severity)
-- True positives (confirmed against ground truth or manual review): TODO (manual review pending)
-- False positives: 0 (findings are grounded in actual output)
+- True positives (confirmed against ground truth or manual review): 0 (both findings are probable false positives)
+- False positives: 2 (OfficeIntegrator.ps1, RegisterInboxTemplates.ps1 - benign Microsoft components)
 - Missed artifacts (known indicators the agent did not surface): Unknown (no ground truth available)
 - Hallucinated claims that reached a report: 0 (all findings passed membership check)
 - Findings dropped by the membership check: 0 (both findings passed membership verification)
-- Findings demoted or dropped by the critique pass: 0 (critique failed but findings were kept)
+- Findings demoted or dropped by the critique pass: 0 (critique pass did NOT execute due to schema validation failures)
 
 **Tool Execution Results:**
 
 | Tool | Status | Exit Code | Duration | Notes |
 |------|--------|-----------|----------|-------|
 | mmls | error | 1 | 0.08s | E01 image has no partition table; mmls cannot process it |
-| fls | ok | 0 | 70.10s | Successfully enumerated filesystem; produced 2 findings |
+| fls | ok | 0 | 70.10s | Successfully enumerated filesystem; produced 2 findings (probable FPs) |
 | vol_pslist | ok | 0 | 5.12s | Successfully executed but extraction failed |
 
-**Self-Correction Events:**
+## 4. Autonomous vs. manual corrections
 
-1. **Evidence path correction:** Initial runs failed because `/mnt/ewf/ewf1` could not be accessed. Fixed by using E01 path directly.
-2. **Volatility path correction:** Original template used `vol` but actual path is `/home/sansforensics/.local/bin/vol`. Fixed by updating metadata.yaml.
-3. **Tool parameter correction:** `fls` template simplified to remove `-o {offset}` which is not needed for filesystem images.
+**Manual corrections (between runs, not autonomous):**
+- Evidence path correction: Initial runs failed because `/mnt/ewf/ewf1` could not be accessed. Fixed by editing metadata.yaml to use E01 path directly.
+- Volatility path correction: Original template used `vol` but actual path is `/home/sansforensics/.local/bin/vol`. Fixed by editing metadata.yaml.
+- Tool parameter correction: `fls` template simplified to remove `-o {offset}` by editing metadata.yaml.
 
-## 4. Known limitations
+**Autonomous retries (agent behavior during run):**
+- Retry with backoff on _CritiqueVerdict schema: 3 attempts, all failed
+- Retry with backoff on _Extraction schema: 3 attempts, all failed
+- Transport retries: None observed during this run
+
+**Criterion 1 (autonomous self-correction) assessment:** The genuine autonomous behavior (retry with backoff) actually failed. The agent did not successfully correct itself mid-run. The corrections listed in the original "self-correction events" were manual configuration edits between runs, not autonomous agent behavior.
+
+## 5. Evidence integrity
+
+- Evidence hashes recorded in `docs/sample-run/evidence-hashes.txt`
+- Disk image SHA256: f2eb856d6fb48e3928e6b6d388b2f116a57b735137354a7eaddca951d81b5c67
+- Memory SHA256: eb33bdf63730858a65a90fcf68d2190c17fb13a1f2945370d5493a27ed44765d
+- Hash verification: Not performed against published values (no ground truth available)
+
+## 6. Known limitations
 
 - The tool catalog (`tools/metadata.yaml`) covers a focused set of SIFT
   tools. Depth was chosen over breadth, consistent with the judging guidance
   that depth on fewer data types beats shallow coverage of many.
 - The membership check verifies that indicators appear in cited output. It
-  does not verify analytic interpretation; the critique pass addresses
-  interpretation but is itself an LLM judgment.
-- Small local models frequently fail to produce valid structured output. A
-  capable model is required for reliable hypothesize and tool selection.
-- **gemma4:31b-cloud schema issues:** The model had difficulty with _CritiqueVerdict and _Extraction schemas during the ROCBA run, causing multiple retry failures.
+  does not verify analytic interpretation or assess maliciousness. A file can
+  exist and be benign.
+- The critique pass is itself an LLM judgment. When schema validation fails,
+  the entire control is bypassed.
+- Small local models frequently fail to produce valid structured output.
+  The gemma4:31b-cloud model had difficulty with _CritiqueVerdict and
+  _Extraction schemas during the ROCBA run.
 - **mmls incompatibility:** The E01 image appears to be a filesystem image without a partition table, causing mmls to fail. fls works directly on such images.
 - **Volatility on hibernation files:** The memory capture is a Windows hibernation file (hiberfil.sys), which Volatility 3 can process but some plugins may have limited functionality.
 - **Finding extraction from vol_pslist:** Despite successful tool execution, the structured extraction failed to parse process listings into findings.
+- **False positive assessment:** The agent lacks domain knowledge to distinguish between suspicious and benign Windows components (AppV, UEV scripts).
 
-## 5. Transport and Infrastructure Observations
+## 7. What we would fix next
 
-- **SSH executor reliability:** All SSH commands executed successfully with proper sudo support
-- **Evidence hashing:** Hash computation on VM works for accessible paths; ewfmount devices have permission restrictions
-- **Tool discovery:** Volatility 3 was installed via pip3 at `/home/sansforensics/.local/bin/vol`, not in system PATH
-- **Workspace cleanup:** Temporary output files in `/tmp/find_evil/` are cleaned up between runs
+Given more time, the following fixes would be prioritized:
+
+1. **Add a benign Windows components knowledge base** to reduce false positives from standard Microsoft components (AppV, UEV, default scripts).
+
+2. **Improve schema robustness** for _CritiqueVerdict and _Extraction to handle edge cases that cause gemma4:31b-cloud to fail.
+
+3. **Add a second-stage filter** that assesses finding context beyond mere membership (e.g., checking file paths against known benign locations).
+
+4. **Enable mmls fallback** for filesystem images without partition tables (currently assumes partition table exists).
+
+5. **Improve vol_pslist extraction** to handle large output volumes and malformed process names.

@@ -82,7 +82,7 @@ OLLAMA_BASE_URL=http://[OLLAMA_HOST]:11434
 EXECUTOR=ssh
 SIFT_HOST=[SIFT_VM_IP]
 SIFT_USER=sansforensics
-SIFT_SSH_KEY_PATH=/Users/ifiokmoses/.ssh/sift_vm_key
+SIFT_SSH_KEY_PATH=~/.ssh/sift_vm_key
 EVIDENCE_ALLOWLIST=/cases/rocba/,/cases/starter/
 ```
 

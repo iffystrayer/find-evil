@@ -1,13 +1,29 @@
-# Sample run artifacts
+# ROCBA Sample Run Artifacts
 
-Place at least one real run here before submission so judges can trace any
-finding to the tool execution that produced it:
+This directory contains the complete artifacts from the ROCBA (Fred Rocba Case) investigation run against real SIFT Workstation evidence.
 
-- `report.md` (and optionally `report.pdf`): a full report from a live run
-  against documented evidence.
-- `execution-log.md` or the relevant ledger export: the structured execution
-  log with timestamps and per-call token usage, as rendered in the report's
-  Execution Log section.
+## Contents
 
-Redact host names or internal paths if your environment differs from the one
-documented in `docs/EVIDENCE-DATASET.md`. Do not fabricate or edit findings.
+- `report.md` - Full investigation report with findings, hypotheses, and execution log
+- `report.pdf` - PDF export of the report
+- `execution-log.md` - Detailed execution log with timestamps, tool commands, and results
+- `evidence-hashes.txt` - SHA256 hashes and sizes of all evidence artifacts
+
+## Investigation Summary
+
+**Run ID:** dca34a92-2824-45fc-89fb-65668684d551
+**Status:** degraded (2 grounded findings, vol_pslist extraction failed)
+**Duration:** 382.1 seconds
+
+**Findings:** 2 INFO-level findings (OfficeIntegrator.ps1, RegisterInboxTemplates.ps1)
+- Note: These are probable false positives (benign Microsoft AppV/UEV components)
+- See `../ACCURACY-REPORT.md` for detailed analysis
+
+**Evidence:**
+- rocba-cdrive.e01 (23GB EnCase disk image)
+- Rocba-Memory.raw (18GB Windows hibernation file)
+- ROCBA-BACKGROUND.pptx (39MB briefing)
+
+## Reproduction
+
+See `../EVIDENCE-DATASET.md` for environment details and reproduction steps.
